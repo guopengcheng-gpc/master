@@ -1,0 +1,303 @@
+<%include("../common/top.html",{title:'测试'}){}%>
+<script type="text/javascript">
+    var path = "${path}";
+    var sessionId = "${sessionId}";
+</script>
+<body>
+<!--<button type="button" onclick="startVideo();">开始捕获视频信息</button>-->
+<!--<button type="button" onclick="stopVideo();">停止捕获视频信息</button>-->
+<span>myId:</span></span><span id="myId"></span>
+<select id="selUser" style="width: 50px;"></select>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="button" onclick="connect();">建立连接</button>
+<button type="button" onclick="hangUp();">挂断</button>
+<select id="myWidth1"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+<select id="myWidth2"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+<br />
+<div>
+    <video id="local-video" autoplay style="width: 240px; height: 180px;
+    border: 1px solid black;"></video>
+    <video id="remote-video" autoplay style="width: 240px; height: 180px;
+    border: 1px solid black;"></video>
+</div>
+<p>
+
+    <script>
+        // ===================以下是socket=======================
+        //var user = Math.round(Math.random()*1000) + "";
+        var user = sessionId;
+        var socketUrl = "wss://"+path.split("//")[1]+"/msgServer/"+user;
+        var socket = null
+        var socketRead = false
+        window.onload = function() {
+
+            socket = new WebSocket(socketUrl)
+            socket.onopen = function() {
+                console.log("成功连接到服务器...")
+                socketRead = true
+            }
+            socket.onclose = function(e) {
+                console.log('与服务器连接关闭: ' + e.code)
+                socketRead = false
+            }
+
+            socket.onmessage = function(res) {
+                var evt = JSON.parse(res.data);
+                console.log(evt)
+                if (evt.type === 'offer') {
+                    console.log("接收到offer,设置offer,发送answer....")
+                    onOffer(evt);
+                } else if (evt.type === 'answer' && peerStarted) {
+                    console.log('接收到answer,设置answer SDP');
+                    onAnswer(evt);
+                } else if (evt.type === 'candidate' && peerStarted) {
+                    console.log('接收到ICE候选者..');
+                    onCandidate(evt);
+                } else if (evt.type === 'bye' && peerStarted) {
+                    console.log("WebRTC通信断开");
+                    stop();
+                }else if (evt.type == 'users') {
+                    var sessions = evt.message;
+                    var personId = "";
+                    $.each(sessions,function (i,even) {
+                        personId += "<option value='"+even+"'>"+even+"</option>";
+                    });
+                    $("#selUser").html("");
+                    $("#selUser").html(personId);
+                }
+            }
+        }
+
+        // ===================以上是socket=======================
+
+        var localVideo = document.getElementById('local-video');
+        var remoteVideo = document.getElementById('remote-video');
+        var localStream = null;
+        var peerConnection = null;
+        var peerStarted = false;
+        var mediaConstraints = {
+            'mandatory': {
+                'OfferToReceiveAudio': true,
+                'OfferToReceiveVideo': true
+            }
+        };
+
+        //----------------------交换信息 -----------------------
+
+        function onOffer(evt) {
+            console.log("接收到offer...")
+            console.log(evt);
+            setOffer(evt);
+            sendAnswer(evt);
+            peerStarted = true
+        }
+
+        function onAnswer(evt) {
+            console.log("接收到Answer...")
+            console.log(evt);
+            setAnswer(evt);
+        }
+
+        function onCandidate(evt) {
+            var candidate = new RTCIceCandidate({
+                sdpMLineIndex: evt.sdpMLineIndex,
+                sdpMid: evt.sdpMid, candidate: evt.candidate
+            });
+            console.log("接收到Candidate...")
+            console.log(candidate);
+            peerConnection.addIceCandidate(candidate);
+        }
+
+        function sendSDP(sdp) {
+            var text = JSON.stringify(sdp);
+            console.log('发送sdp.....')
+            console.log(text); // "type":"offer"....
+            // textForSendSDP.value = text;
+            // 通过socket发送sdp
+            socket.send(text)
+        }
+
+        function sendCandidate(candidate) {
+            var text = JSON.stringify(candidate);
+            console.log(text);// "type":"candidate","sdpMLineIndex":0,"sdpMid":"0","candidate":"....
+            socket.send(text)// socket发送
+        }
+
+        //---------------------- 视频处理 -----------------------
+        function startVideo() {
+            navigator.getUserMedia = navigator.getUserMedia ||
+                navigator.webkitGetUserMedia ||
+                navigator.mozGetUserMedia;
+            if (navigator.getUserMedia) {
+                navigator.getUserMedia({ video: false, audio: true },
+                    function (stream) { //success
+                        localStream = stream;
+                        localVideo.srcObject = stream;
+                        //localVideo.src = window.URL.createObjectURL(stream);
+                        localVideo.play();
+                        localVideo.volume = 0;
+                    },
+                    function (error) { //error
+                        console.error('发生了一个错误: [错误代码：' + error.code + ']');
+                        return;
+                    });
+            }
+
+        }
+
+
+        //---------------------- 处理连接 -----------------------
+        function prepareNewConnection() {
+            var pc_config = { "iceServers": [] };
+            var peer = null;
+            try {
+                peer = new webkitRTCPeerConnection(pc_config);
+            }
+            catch (e) {
+                console.log("建立连接失败，错误：" + e.message);
+            }
+
+            // 发送所有ICE候选者给对方
+            peer.onicecandidate = function (evt) {
+                if (evt.candidate) {
+                    console.log(evt.candidate);
+                    sendCandidate({
+                        type: "candidate",
+                        sdpMLineIndex: evt.candidate.sdpMLineIndex,
+                        sdpMid: evt.candidate.sdpMid,
+                        candidate: evt.candidate.candidate
+                    });
+                }
+            };
+            console.log('添加本地视频流...');
+            peer.addStream(localStream);
+
+            peer.addEventListener("addstream", onRemoteStreamAdded, false);
+            peer.addEventListener("removestream", onRemoteStreamRemoved, false);
+
+            // 当接收到远程视频流时，使用本地video元素进行显示
+            function onRemoteStreamAdded(event) {
+                console.log("添加远程视频流");
+                // remoteVideo.src = window.URL.createObjectURL(event.stream);
+                remoteVideo.srcObject = event.stream;
+            }
+
+            // 当远程结束通信时，取消本地video元素中的显示
+            function onRemoteStreamRemoved(event) {
+                console.log("移除远程视频流");
+                remoteVideo.src = "";
+            }
+
+            return peer;
+        }
+
+        function sendOffer() {
+            peerConnection = prepareNewConnection();
+            peerConnection.createOffer(function (sessionDescription) { //成功时调用
+                peerConnection.setLocalDescription(sessionDescription);
+                console.log("发送: SDP");
+                console.log(sessionDescription);
+                sendSDP(sessionDescription);
+            }, function (err) {  //失败时调用
+                console.log("创建Offer失败");
+            }, mediaConstraints);
+        }
+
+        function setOffer(evt) {
+            if (peerConnection) {
+                console.error('peerConnection已存在!');
+                return;
+            }
+            peerConnection = prepareNewConnection();
+            peerConnection.setRemoteDescription(new RTCSessionDescription(evt));
+        }
+
+        function sendAnswer(evt) {
+            console.log('发送Answer,创建远程会话描述...');
+            if (!peerConnection) {
+                console.error('peerConnection不存在!');
+                return;
+            }
+
+            peerConnection.createAnswer(function (sessionDescription) {//成功时
+                peerConnection.setLocalDescription(sessionDescription);
+                console.log("发送: SDP");
+                console.log(sessionDescription);
+                sendSDP(sessionDescription);
+            }, function () {                                             //失败时
+                console.log("创建Answer失败");
+            }, mediaConstraints);
+        }
+
+        function setAnswer(evt) {
+            if (!peerConnection) {
+                console.error('peerConnection不存在!');
+                return;
+            }
+            peerConnection.setRemoteDescription(new RTCSessionDescription(evt));
+        }
+
+        //-------- 处理用户UI事件 -----
+        // 开始建立连接
+        function connect() {
+            if (!peerStarted && localStream && socketRead) {
+                sendOffer();
+                peerStarted = true;
+            } else {
+                alert("请首先捕获本地视频数据.");
+            }
+        }
+
+        // 停止连接
+        function hangUp() {
+            console.log("挂断.");
+            stop();
+        }
+
+        function stop() {
+            peerConnection.close();
+            peerConnection = null;
+            peerStarted = false;
+        }
+
+        $(function () {
+            $("#myId").text(sessionId);
+            navigator.getUserMedia = navigator.getUserMedia ||
+                navigator.webkitGetUserMedia ||
+                navigator.mozGetUserMedia  ||
+                navigator.mediaDevices.getUserMedia;
+            if (navigator.getUserMedia) {
+                navigator.getUserMedia({ video: true, audio: true },
+                    function (stream) { //success
+                        localStream = stream;
+                        localVideo.srcObject = stream;
+                        //localVideo.src = window.URL.createObjectURL(stream);
+                        localVideo.play();
+                        localVideo.volume = 0;
+                    },
+                    function (error) { //error
+                        console.error('发生了一个错误: [错误代码：' + error.code + ']');
+                        return;
+                    });
+            }
+        });
+
+        function stopVideo() {
+
+            localStream.stop();
+            localVideo.src = "";
+        }
+
+        $("#myWidth1").change(function () {
+            var num = $("#myWidth1").val();
+            $("#local-video").width(240*parseInt(num));
+            $("#local-video").height(180*parseInt(num));
+        });
+        $("#myWidth2").change(function () {
+            var num = $("#myWidth2").val();
+            $("#remote-video").width(240*parseInt(num));
+            $("#remote-video").height(180*parseInt(num));
+        });
+    </script>
+</body>
+</html>

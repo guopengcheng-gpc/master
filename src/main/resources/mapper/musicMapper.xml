@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.temp.myself.music.dao.MusicMapper">
+        <select id="getMusicNumMonth" resultType="java.lang.Integer">
+            select count(*)
+               from MUSIC
+            WHERE
+                <if test='yue == "1"'>
+                      DATE_FORMAT(UPDATE_TIME,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')
+                </if>
+                <if test='yue == "2"'>
+                     PERIOD_DIFF(date_format( now(),'%Y%m') , date_format(UPDATE_TIME, '%Y%m' ) ) =1
+                </if>
+                <if test='yue == "3"'>
+                     PERIOD_DIFF(date_format( now(),'%Y%m') , date_format(UPDATE_TIME, '%Y%m' ) ) =2
+                </if>
+                <if test="yuan != null and yuan != ''">
+                    AND SOURCE = #{yuan}
+                </if>
+        </select>
+        <select id="getAuthorNum" resultType="com.temp.myself.music.entiy.dto.MusicAuhtorNumDTO">
+            select
+            AUTHOR,
+            SUM(NUM) as NUM
+            FROM MUSIC GROUP BY AUTHOR ORDER BY SUM(NUM) DESC LIMIT 5
+        </select>
+    <select id="getMusicCountNum" resultType="java.lang.Integer">
+        select sum(NUM)
+        FROM MUSIC
+    </select>
+    <select id="getMusicArgNum" resultType="java.lang.Double">
+        select avg(NUM)
+        FROM MUSIC
+    </select>
+    <select id="getMusicCountMost" resultType="java.lang.Integer">
+        select NUM
+        FROM MUSIC ORDER BY NUM DESC LIMIT 1
+    </select>
+    <select id="getMusicSouceNum" resultType="java.lang.Integer">
+        select sum(NUM)
+        FROM MUSIC where
+        <if test="yuan != null and yuan != ''">
+            SOURCE = #{yuan}
+        </if>
+    </select>
+
+    <update id="updateMusicMonth">
+        update MUSIC set MONTH_THREE = MONTH_TWO;
+        update MUSIC set MONTH_TWO = MONTH_ONE;
+        update MUSIC set MONTH_ONE = 0;
+    </update>
+</mapper>

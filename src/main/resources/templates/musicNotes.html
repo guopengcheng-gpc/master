@@ -1,0 +1,385 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>音乐统计</title>
+    <script src="https://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+    <link rel="stylesheet" href="css/music/comon0.css">
+    <style>
+        .grid {
+            margin-top:5%;
+            width:80%;
+            height: 10px;
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-column-gap: 14px;
+        }
+
+        .line {
+            position: relative;
+            width: 90%;
+            height: 7px;
+        }
+        .line::before, .line::after {
+            content: '';
+            position: absolute;
+            width: 4.5rem;
+            height: 100%;
+            border-radius: 7px;
+            background-color: #FF0000;
+        }
+        .line::before {
+            animation: first-line ease-in-out 4s var(--delay) infinite alternate;
+        }
+        .line::after {
+            bottom: 0;
+            background-color: #B22222;
+            width: calc(80% - 10px);
+            animation: second-line ease-in-out 4s var(--delay) infinite alternate;
+        }
+        .line:nth-child(1) {
+            --delay: calc(-0.1s);
+        }
+
+
+        @keyframes first-line {
+            70% {
+                width: calc(80% - 10px);
+            }
+            100% {
+                background-color: #FF0000;
+            }
+        }
+
+    </style>
+</head>
+<script type="text/javascript">
+    var threeMusicNum = [${threeMusicNum}];//柱状统计
+    var monthMusic = [${monthMusic}];//听歌统计
+    var newMusic = "${musicNew}";//最新6条数据
+    var musicAuthorNum = [${musicAuthorNum}];//歌手次数统计
+    var musicCount = [${musicCount}];
+
+
+    var month = new Date().getMonth() +1;
+    var month1 = 0;
+    if (month == 2){
+        month1 = 1;
+    } else if (month == 1){
+        month1 = 12;
+    } else{
+        month1 = month - 1;
+    }
+    var yu = 0;
+    var bili = 0;
+    $(function () {
+        if (monthMusic[0][month] > monthMusic[0][month1]) {
+            yu = monthMusic[0][month] - monthMusic[0][month1];
+            bili = (Math.round(yu / (monthMusic[0][month1] == 0?100:monthMusic[0][month1]) * 10000) / 100.00);
+        }else{
+            yu = monthMusic[0][month1] - monthMusic[0][month];
+            bili = -(Math.round(yu / (monthMusic[0][month1] == 0?100:monthMusic[0][month1]) * 10000) / 100.00);
+        }
+        //听歌统计前三个设置
+        $("#benMonth").text(monthMusic[0][month]);
+        $("#shangMonth").text(monthMusic[0][month1]);
+        $("#bi").text(bili + "%");
+        //次数统计
+        $("#count").text(musicCount[0][0]);
+        $("#count1").text(musicCount[0][1]);
+        $("#count2").text(musicCount[0][2]);
+        $("#count3").text(musicCount[0][3]);
+    });
+    setInterval(function () {
+        $.ajax({
+            url: "/musicNotesAll",
+            type: "GET",
+            dataType: 'json',
+            success:function (data) {
+                threeMusicNum = [data.threeMusicNum];//柱状统计
+                monthMusic = [data.monthMusic];//听歌统计
+                newMusic = data.musicNew;//最新6条数据
+                musicAuthorNum = [data.musicAuthorNum];//歌手次数统计
+                musicCount = [data.musicCount];
+
+
+                if (monthMusic[0][month] > monthMusic[0][month1]) {
+                    yu = monthMusic[0][month] - monthMusic[0][month1];
+                    bili = (Math.round(yu / (monthMusic[0][month1] == 0?100:monthMusic[0][month1]) * 10000) / 100.00);
+                }else{
+                    yu = monthMusic[0][month1] - monthMusic[0][month];
+                    bili = -(Math.round(yu / (monthMusic[0][month1] == 0?100:monthMusic[0][month1]) * 10000) / 100.00);
+                }
+                $("#benMonth").text(monthMusic[0][month]);
+                $("#shangMonth").text(monthMusic[0][month1]);
+                $("#bi").text(bili + "%");
+                //次数统计
+                $("#count").text(musicCount[0][0]);
+                $("#count1").text(musicCount[0][1]);
+                $("#count2").text(musicCount[0][2]);
+                $("#count3").text(musicCount[0][3]);
+                var musicNew = data.musicNew;
+                for (var i=0;i<6;i++){
+                    $("#new"+i).text(musicNew[i].name);
+                    $("#new"+i+"-1").text(musicNew[i].author +"  "+musicNew[i].updateTime);
+                }
+            },
+            error:function () {
+                alert("同步失败");
+            }
+        });
+        wbzl();
+        yqbj();
+        wxyg();
+        wwbzl();
+        sbj();
+    },120000);
+    $(document).ready(function() {
+        var html = $(".wrap ul").html()
+        $(".wrap ul").append(html)
+        var ls = $(".wrap li").length / 2 + 1
+        i = 0
+        ref = setInterval(function() {
+            i++
+            if (i == ls) {
+                i = 1
+                $(".wrap ul").css({
+                    marginTop: 0
+                })
+                $(".wrap ul").animate({
+                    marginTop: -'.52' * i + 'rem'
+                }, 1000)
+            }
+            $(".wrap ul").animate({
+                marginTop: -'.52' * i + 'rem'
+            }, 1000)
+
+
+        }, 2400);
+
+
+
+        var html2 = $(".adduser ul").html()
+        $(".adduser ul").append(html2)
+        var ls2 = $(".adduser li").length / 2 + 1
+        a = 0
+        ref = setInterval(function() {
+            a++
+            if (a == ls2) {
+                a = 1
+                $(".adduser ul").css({
+                    marginTop: 0
+                })
+                $(".adduser ul").animate({
+                    marginTop: -'.5' * a + 'rem'
+                }, 800)
+            }
+            $(".adduser ul").animate({
+                marginTop: -'.5' * a + 'rem'
+            }, 800)
+
+
+        }, 4300);
+
+
+
+
+
+
+    function time(time) {
+        var time1 = time;
+        time1 = time1.replace("T","&nbsp;");
+        return time1;
+    }
+
+    })
+</script>
+<body style=''>
+<div class="loading">
+    <div class="loadbox"> <img src="image/music/loading.gif"> 页面加载中... </div>
+</div>
+<div class="head">
+    <h1>音乐统计</h1>
+    <div class="weather"><span id="showTime"></span></div>
+    <script>
+        var t = null;
+        t = setTimeout(time, 1000);
+
+        function time() {
+            clearTimeout(t);
+            dt = new Date();
+            var y = dt.getFullYear();
+            var mt = dt.getMonth() + 1;
+            var day = dt.getDate();
+            var h = dt.getHours();
+            var m = dt.getMinutes();
+            var s = dt.getSeconds();
+            document.getElementById("showTime").innerHTML = y + "年" + mt + "月" + day + "-" + h + "时" + m + "分" + s + "秒";
+            t = setTimeout(time, 1000);
+        }
+    </script>
+</div>
+<div class="mainbox">
+    <ul class="clearfix">
+        <li>
+            <div class="boxall" style="height: 5.2rem">
+                <div class="alltitle">听歌统计</div>
+
+                <div class="sycm">
+                    <ul class="clearfix">
+                        <li>
+                            <h2 id="benMonth">1824</h2><span>本月听歌数量</span>
+                        </li>
+                        <li>
+                            <h2 id="shangMonth">1920</h2><span>上月听歌数量</span>
+                        </li>
+                        <li>
+                            <h2 id="bi">5%</h2><span>环比增长</span>
+                        </li>
+                    </ul>
+                    <div style="border-bottom: 1px solid rgba(255,255,255,.1)"></div>
+                    <!--<ul class="clearfix">
+                        <li>
+                            <h2>824</h2><span>主机(20001)</span>
+                        </li>
+                        <li>
+                            <h2>710</h2><span>主机(20003)</span>
+                        </li>
+                        <li>
+                            <h2>200</h2><span>主机(20002)</span>
+                        </li>
+                    </ul>-->
+
+
+                </div>
+                <div class="addnew">
+                    <div class="tit02"><span>柱形统计</span></div>
+                    <div class="allnav" style="height: 2.2rem" id="wbzl"></div>
+                </div>
+                <div class="boxfoot"></div>
+            </div>
+            <div class="boxall" style="height: 3.4rem">
+                <div class="alltitle">歌手排名</div>
+                <div class="allnav" style="height: 1.5rem" id="wxyg" hidden></div>
+                <div class="addnew">
+                    <div class="tit02"><span>数量</span></div>
+                    <div class="allnav" style="height: 2.0rem" id="wwbzl"></div>
+                </div>
+                <div class="boxfoot"></div>
+            </div>
+        </li>
+        <li>
+            <div class="bar">
+                <div class="barbox ">
+                    <ul class="clearfix">
+                        <li class="pulll_left counter" id="count">
+                            6069
+                        </li>
+                        <li class="pulll_left counter" id="count1">410</li>
+                    </ul>
+                </div>
+                <div class="barbox2">
+                    <ul class="clearfix">
+                        <li class="pulll_left">听歌次数</li>
+                        <li class="pulll_left">听歌数量</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bar">
+                <div class="barbox">
+                    <ul class="clearfix">
+                        <li class="pulll_left counter" id="count2">81189</li>
+                        <li class="pulll_left counter" id="count3">39410</li>
+                    </ul>
+                </div>
+                <div class="barbox2">
+                    <ul class="clearfix">
+                        <li class="pulll_left">最多次数</li>
+                        <li class="pulll_left">平均次数</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="map" style="margin-top: 50px">
+                <div class="map1"><img src="image/music/lbx.png"></div>
+                <div class="map2"><img src="image/music/jt.png"></div>
+                <div class="map3"><img src="image/music/map.png"></div>
+                <div class="map4" id="map_1"></div>
+            </div>
+            <div class="boxall" style="height: 3.4rem" hidden>
+                <div class="alltitle">电报警</div>
+                <div class="allnav" id="dbj" style="width:7.2rem;height:3rem;margin-top: 0.3rem"></div>
+                <div class="boxfoot"></div>
+            </div>
+        </li>
+        <li>
+            <div class="boxall" style="height:5.2rem">
+                <div class="alltitle">听歌</div>
+
+                <div class="clearfix">
+                    <div class="sy" style="width:300px;" id="yqbj"></div>
+                </div>
+                <div class="addnew">
+                    <div class="tit02"><span>最新歌曲</span></div>
+                    <div class="adduser" style="height: 2.0rem">
+                        <ul id="musicNew">
+                            <%for(even in musicNew){%>
+                            <li class="clearfix"> <span class="pulll_left" id="new${evenLP.index}">${even.name}</span> <span class="pulll_right" id="new${evenLP.index}-1">${even.author}  ${even.updateTime}</span> </li>
+                            <%}%>
+                            <!--<li class="clearfix"> <span class="pulll_left" id="1_1">大连市XX医院</span> <span class="pulll_right" id="1_2">一楼 - 吸烟 - 2019-10-11
+											09:58:58 </span> </li>
+                            <li class="clearfix"> <span class="pulll_left" id="2_1">大连市XX集团</span> <span class="pulll_right" id="2_2">二楼 - 误报 - 2019-10-11
+											09:58:58 </span> </li>
+                            <li class="clearfix"> <span class="pulll_left" id="3_1">开发区医院</span> <span class="pulll_right" id="3_2">三楼 - 粉尘 - 2019-10-11
+											09:58:58 </span> </li>
+                            <li class="clearfix"> <span class="pulll_left" id="4_1">时代广场</span> <span class="pulll_right" id="4_2">四楼 - 误报 - 2019-10-11
+											09:58:58 </span> </li>
+                            <li class="clearfix"> <span class="pulll_left" id="5_1">海昌物业</span> <span class="pulll_right" id="5_2">四楼 - 误报 - 2019-10-11
+											09:58:58 </span> </li>
+                            <li class="clearfix"> <span class="pulll_left" id="6_1">海昌物业</span> <span class="pulll_right" id="6_2">四楼 - 误报 - 2019-10-11
+											09:58:58 </span> </li>-->
+                        </ul>
+                    </div>
+                </div>
+                <div class="boxfoot"></div>
+            </div>
+            <div class="boxall" style="height: 1.4rem">
+                <div class="alltitle">听歌次数</div>
+                <div class="grid">
+                    <span class="line"></span>
+                </div>
+                <div>
+                    <span style="color: #fff;opacity:.5">本月最多次数 ：</span><span style="color: #DC143C;font-size:.1rem;    font-weight: bold;">809</span>
+                    <span style="margin-left:15%;color: #fff;opacity:.5">上月最多次数 ：</span><span style="color: #ffeb7b;font-size:.1rem;    font-weight: old;">109</span>
+
+                </div>
+                <div class="boxfoot"></div>
+            </div>
+            <div class="boxall" style="height: 3.4rem" hidden>
+                <div class="alltitle">歌曲</div>
+                <div class="allnav" style="height: 3.0rem" id="sbj"></div>
+
+                <div class="boxfoot"></div>
+            </div>
+        </li>
+    </ul>
+
+</div>
+<div class="back"></div>
+<script src="https://www.jq22.com/jquery/echarts-4.2.1.min.js"></script>
+<script type="text/javascript" src="js/music/echarts-gl.min.js"></script>
+<script language="JavaScript" src="js/music/echarts-tool.js"></script>
+<script type="text/javascript" src="js/music/timelineOption.js"></script>
+
+
+
+<script type="text/javascript">
+
+</script>
+<script type="text/javascript" src="js/music/jquery.waypoints.min.js"></script>
+<script type="text/javascript" src="js/music/jquery.countup.min.js"></script>
+<script type="text/javascript">
+    $('.counter').countUp();
+</script>
+
+</body>
+</html>

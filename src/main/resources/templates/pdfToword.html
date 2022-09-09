@@ -1,0 +1,262 @@
+<%include("common/top.html",{title:'pdf转word'}){}%>
+<script>
+    var list1;
+    var list2;
+</script>
+<div style="text-align: center;margin-top: 20px">
+    <!--转换pdf-->
+    <div style="width: 500px;margin: auto;">
+        <label id="realBtn" class="btn btn-info">
+            <input type="file" id="file" name="file" accept=".pdf" class="mFileInput" style="left:-9999px;position:absolute;">
+            <span>请选择转换pdf文件</span>
+        </label>
+        <span id="xian">未选择文件</span>
+        <button class="btn" id="zhuan">转换</button>
+        <a href="" id="xiaZai" hidden><span id="zai">下载</span></a>
+    </div>
+<!--解析excel-->
+    <div style="width: 500px;margin: auto;padding-top: 10px">
+        <label id="realBtn1" class="btn btn-info">
+            <input type="file" id="file1" name="file1" accept=".xls,.xlsx" class="mFileInput" style="left:-9999px;position:absolute;">
+            <span>请选择解析excel文件</span>
+        </label>
+        <span id="excel">未选择文件</span>
+        <button class="btn" id="zhuan1">上传</button>
+        <button class="btn" id="cao" data-toggle="modal" data-target="#myModal1">操作</button>
+        <button class="btn" id="dao">导出</button>
+    </div>
+    <div>
+        <span>预览</span>
+        <table id="excel1" style="border: solid;border-radius: 20px;margin-left: 10px">
+
+        </table>
+    </div>
+
+</div>
+
+<div class="modal fade" id="myModal" style="text-align: center" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <img style="width: 100px;height: 100px;margin: auto;border-radius:50px;" src="./image/jiazai.gif">
+    </div><!-- /.modal -->
+</div>
+<div class="modal fade" id="myModal1" style="text-align: center" tabindex="-1" role="dialog" data-keyboard="false" aria-labelledby="myModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content" style="width:700px;margin:auto">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="cangModalLabel">操作</h4>
+            </div>
+            <div class="modal-body" style="max-height: 400px;overflow-y: auto">
+                <div class="form-group">
+                    <label for="sqlName" class="col-sm-2 control-label">拼接</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="sqlName" placeholder="^{q}代表替换列,q为列下标,^{q}不可超过10个">
+                    </div>
+                    <button class="btn col-sm-2" id="pin">应用</button>
+                </div>
+                <div class="form-group" style="margin-top: 50px">
+                    <label for="contract" class="col-sm-2 control-label">筛选</label>
+                    <div class="col-sm-2">
+                        <select class="form-control" id="sel1">
+                            <option>包含</option>
+                            <option>不包含</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <select class="form-control" id="sel2">
+                            <option>中间</option>
+                            <option>前缀</option>
+                            <option>后缀</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" id="lie" placeholder="筛选列,不填为所有">
+                    </div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" id="contract" placeholder="筛选内容">
+                    </div>
+                    <button class="btn col-sm-2" id="shai">应用</button>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<script type="application/javascript">
+    $("#file").change(function () {
+        $("#xian").text($("#file")[0].files[0].name);
+    });
+    $("#file1").change(function () {
+        $("#excel").text($("#file1")[0].files[0].name);
+    });
+    $("#zhuan").click(function () {
+        $("#myModal").modal("show");
+
+        var fromDate = new FormData();
+        fromDate.append("file",$("#file")[0].files[0]);
+        $.ajax({
+            url:"/change",
+            type:"POST",
+            data:fromDate,
+            dataType:"json",
+            cache:false,
+            processData: false,
+            contentType : false,
+            success:function (data) {
+                var msg = data.message;
+                $("#myModal").modal("hide");
+                $("#xiaZai").attr("href","./wordChu?path=" +data.path);
+                $("#zai").click();
+                alert(msg);/*转换后文件windos保存在桌面 linux保存在/root/中*/
+            },
+            error:function () {
+                alert("请求失败");
+            }
+        });
+    });
+    $("#zhuan1").click(function () {
+        var fromDate = new FormData();
+        fromDate.append("file",$("#file1")[0].files[0]);
+        $.ajax({
+            url:"/excel",
+            type:"POST",
+            data:fromDate,
+            dataType:"json",
+            cache:false,
+            processData: false,
+            contentType : false,
+            success:function (data) {
+                var list = data;
+                list1 = list;
+                var tb = "";
+                var shu = 5;
+                if (5 > list.length){
+                    shu = list.length;
+                }
+                for (var i = 0;i<shu;i++){
+                    var trTest = "<tr>";
+                    for (var j = 0;j< list[i].length;j++){
+                        trTest = trTest + "<td style='border: solid;padding: 2px'>"+list[i][j]+"</td>";
+                    }
+                    trTest = trTest + "</tr>";
+                    tb = tb + trTest;
+                }
+                $("#excel1").html("");
+                $("#excel1").html(tb);
+            },
+            error:function () {
+                alert("请求失败");
+            }
+        });
+    });
+
+    $("#pin").click(function () {
+        var list = list1;
+        var sqlName = $("#sqlName").val();
+        $.ajax({
+            url:"/pinSqlExcel",
+            type:"POST",
+            data:{sqlName:sqlName,jsonList:JSON.stringify(list)},
+            dataType:"json",
+            success:function (data) {
+                list = data;
+                list2 = data;
+                var tb = "";
+                var shu = 5;
+                if (5 > list.length){
+                    shu = list.length;
+                }
+                for (var i = 0;i<shu;i++){
+                    var trTest = "<tr>";
+                    for (var j = 0;j< list[i].length;j++){
+                        trTest = trTest + "<td style='border: solid;padding: 2px'>"+list[i][j]+"</td>";
+                    }
+                    trTest = trTest + "</tr>";
+                    tb = tb + trTest;
+                }
+                $("#excel1").html("");
+                $("#excel1").html(tb);
+            },
+            error:function () {
+                alert("应用失败");
+            }
+        });
+    });
+    $("#shai").click(function () {
+        var han = $("#sel1 option:selected").text();
+        var wei = $("#sel2 option:selected").text();
+        var lie = $("#lie").val();
+        var contract = $("#contract").val();
+
+        var list = list1;
+
+        $.ajax({
+            url:"/selectExcel",
+            type:"POST",
+            data:{han:han,wei:wei,lie:lie,contract:contract,jsonList:JSON.stringify(list)},
+            dataType:"json",
+            success:function (data) {
+                console.log(data);
+                list = data;
+                list2 = data;
+                var tb = "";
+                var shu = 5;
+                if (5 > list.length){
+                    shu = list.length;
+                }
+                for (var i = 0;i<shu;i++){
+                    var trTest = "<tr>";
+                    for (var j = 0;j< list[i].length;j++){
+                        trTest = trTest + "<td style='border: solid;padding: 2px'>"+list[i][j]+"</td>";
+                    }
+                    trTest = trTest + "</tr>";
+                    tb = tb + trTest;
+                }
+                $("#excel1").html("");
+                $("#excel1").html(tb);
+            },
+            error:function () {
+                alert("应用失败");
+            }
+        });
+
+    });
+    $("#dao").click(function () {
+        $.ajax({
+            url:"/exportTxt",
+            type:"POST",
+            data:{jsonList:list2 == null ?JSON.stringify(list1):JSON.stringify(list2)},
+            dataType:"json",
+            async:true,
+            success:function (data) {
+                ajaxFileDownload(data.file, data.filename);
+                console.log("导出成功");
+            },
+            error:function () {
+                alert("导出失败");
+            }
+        });
+    });
+
+    /**
+     * alax下载文件
+     * @param data
+     * @param filename
+     */
+    function ajaxFileDownload(data,filename) {
+        var a = document.createElement('a');
+        var bstr = atob(data), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        var blob =  new Blob([u8arr], { type: "application/octet-stream" });
+        var url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>

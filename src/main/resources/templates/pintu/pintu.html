@@ -1,0 +1,208 @@
+<%include("../common/top.html",{title:'拼图'}){}%>
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="/image/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/image/favicon.ico" type="image/x-icon" />
+<link rel="stylesheet" href="../css/pintu/zepto.css" type="text/css">
+<script type="text/javascript" src="../js/pintu/picturePuzzle.js?t="+Math.random()></script>
+<script src="../js/pintu/zepto.min.js"></script>
+<script src="../js/pintu/lrz.min.js"></script>
+<script type="text/javascript">
+    var name = "${name}";
+    var sum = "${sum}";
+    var urlPath = "${urlPath}";
+    var start = false;
+    var biLiZu = '${biLi}';
+</script>
+<!--电脑端-->
+<%if(device == "computer"){%>
+<div style="margin: 5px;text-align: center;">
+    <span style="font-size: 50px">拼图</span>
+    <button class="btn" style="font-size: 10px" id="updatePicture" data-toggle="modal" data-target="#myModal">设置图片</button>
+</div>
+<div class="row">
+    <div style="margin: auto;padding:0 150px;" id = "all" class = "tu2 col-lg-6">
+
+    </div>
+    <div style="margin-top: 5px" class="col-lg-6">
+        <div style="width: 50%;float: left;margin: auto;" class="row">
+            <div class="col-lg-10 tu">
+                <img id="picture" src="" width="100%" height="100%" >
+            </div>
+        </div>
+        <div style="width: 50%;float: right;margin: auto;" class="row">
+            <div class="col-lg-10" style="margin: auto;padding-top: 20px">
+                <div><button class="btn" onclick="showPic()" id="niu" style="font-size: 5rem;margin-left: 10px">开始</button></div>
+                <div><span style="margin-left: 43px;margin-top: 20px;font-size: 4rem" id="time">0:0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--手机端-->
+<%}else if(device == "phone"){%>
+<div style="margin: 5px;text-align: center;">
+    <span style="font-size: 2rem">拼图</span>
+</div>
+<div style="width: 95%;margin: auto;height: 40rem" id = "all" class = "tu2">
+
+</div>
+<div style="margin-top: 5px">
+    <div style="width: 50%;float: left;margin: auto;" class="row">
+        <div class="col-lg-10 tu">
+            <img id="picture" src="" width="100%" height="100%" >
+        </div>
+    </div>
+    <div style="width: 50%;float: right;margin: auto;" class="row">
+        <div class="col-lg-10" style="margin: auto;padding-top: 20px">
+            <div><button class="btn" onclick="showPic()" id="niu" style="font-size: 5rem;margin-left: 10rem">开始</button></div>
+            <div><span style="margin-left: 13rem;margin-top: 20px;font-size: 4rem" id="time">0:0</span></div>
+        </div>
+    </div>
+</div>
+<%}%>
+
+
+
+<!--列表模态框-->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">更换拼图图片</h4>
+            </div>
+            <div class="modal-body" id="listM" style="max-height: 400px;overflow-y: auto">
+                <div class="weui-uploader__bd">
+                    <ul class="weui-uploader__files" id="uploaderFiles">
+                    </ul>
+                    <div class="weui-uploader__input-box hide">
+                        <input id="uploaderInput" class="weui-uploader__input" accept="image/*" multiple=""
+                               type="file">
+                    </div>
+                </div>
+                <div>
+                    <button type="text" class="btn btn-success mr-2 float-right" onclick="editClick(this)">编辑</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="margin-top: 10px">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+<script>
+    var biLi = 1.5;
+    $(function () {
+        if (sum == 0){
+            alert("还没有拼图图片，请在电脑端打开上传");
+        }
+        var ht = "";
+        for (var i=1;i<17;i++){
+            ht += "<div style='width: 25%;height: 10rem;float: left' class='tu1'><img src='' id='"+i+"'  height='100%' width='100%' val='0' onclick='dian(this);'></div>";
+        }
+        $("#all").html(ht);
+        $(".tu").height(parseFloat($(".tu").width())*biLi);
+        $(".tu1").height(parseFloat($(".tu1").width())*biLi);
+        $(".tu2").height(parseFloat($(".tu2").width())*biLi);
+        var pp ="";
+        var nameOld = name;
+        for (var i=0;i<parseFloat(sum);i++){
+            pp+= "<li class='weui-uploader__file' style='background-image:url("+urlPath+i+nameOld+".jpg)'></li>";
+        }
+        $("#uploaderFiles").html(pp);
+    });
+
+    function showPic() {
+        $("#niu").attr("disabled",true);
+        place = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+        sui();
+        var shu = parseInt(Math.random()*sum);
+        name = shu +name;
+        var zu = biLiZu.substring(1,biLiZu.length-1).split(",");
+        console.log(zu);
+        biLi = parseFloat(zu[shu]);
+        $(".tu").height(parseFloat($(".tu").width())*biLi);
+        $(".tu1").height(parseFloat($(".tu1").width())*biLi);
+        $(".tu2").height(parseFloat($(".tu2").width())*biLi);
+        $("#picture").attr("src",urlPath+name+".jpg");
+        $("#time").text("0:0");
+        start = true;
+        console.log(place);
+        for (var i=1;i<17;i++){
+            $("#"+i).attr("val",place[i-1]-1);
+            if ((place[i-1]-1) != 15){
+                $("#"+i).attr("src",urlPath+name+(place[i-1]-1)+".jpg");
+            } else{
+                $("#"+i).attr("src","../image/pintu/bai.png");
+            }
+
+        }
+    }
+    function dian(even) {
+        var wei = $(even).attr("id");
+        huan(wei);
+        var flag = true;
+        for (var i=1;i<17;i++){
+            var zhi = $("#"+i).attr("val");
+            if (parseInt(zhi)+1 != i){
+                flag = false;
+            }
+        }
+        if (flag) {
+            start = false;
+            $("#niu").attr("disabled",false);
+            alert("成功，成绩为"+$("#time").text());
+            //$("#"+i).attr("src",urlPath+name+i+".jpg");
+        }
+    }
+    var jiShi = setInterval(function () {
+        if (start){
+            var time = $("#time").text().split(":");
+            if (parseInt(time[1]) == 59){
+                time[0] = parseInt(time[0]) +1;
+                time[1] = 0;
+            } else {
+                time[1] = parseInt(time[1]) +1;
+            }
+            $("#time").text(time[0]+":"+time[1]);
+        }
+    },1000);
+
+    function editClick(obj) {
+        if ($(obj).text() == "编辑") {
+            $(obj).text("取消编辑");
+            $(".weui-uploader__input-box").removeClass("hide");
+            $("li.weui-uploader__file").addClass("weui-uploader__file_status");
+        } else {
+            $(".weui-uploader__input-box").addClass("hide");
+            $("li.weui-uploader__file").removeClass("weui-uploader__file_status");
+            $(obj).text("编辑");
+        }
+    }
+    $(document).ready(function() {
+        uploaderFilesLoad("uploaderFiles","uploaderInput",5,function(){
+            console.log("回调函数");
+            //console.log(getImgFilesData("uploaderFiles"));//多张图片中以逗号分隔
+            var fromDate = new FormData();
+            fromDate.append("pic",getImgFilesData("uploaderFiles"));
+            fromDate.append("name",name);
+            $.ajax({
+                url:"/savePic",
+                type:"POST",
+                contentType : "application/x-www-form-urlencoded;charset=utf-8",/*后台用RequestBody接收必须加这一条*/
+                dataType:"json",
+                data: {"pic":getImgFilesData("uploaderFiles"),"name":name},
+                success:function (data) {
+                    if (data.msg != "保存成功"){
+                        sum = data.sum;
+                        biLiZu = data.biLi;
+                        console.log(data.msg);
+                    }
+                },
+                error:function (data) {
+                    alert("保存失败");
+                }
+            });
+        });
+    });
+</script>

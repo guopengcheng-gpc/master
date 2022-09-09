@@ -1,0 +1,889 @@
+<%include("common/top.html",{title:'音乐'}){}%>
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="/image/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/image/favicon.ico" type="image/x-icon" />
+<!--<link rel="stylesheet" href="/css/music/style.css">
+<script src='./js/music/prefixfree.min.js'></script>-->
+
+<script>
+    var page = 1;
+    var cang = "${flag}";
+    $(function () {
+        var ua = navigator.userAgent.toLowerCase();
+        if(ua.match(/MicroMessenger/i)=="micromessenger") {
+            $(".col-lg-6").addClass("col-lg-12");
+            $(".col-lg-12").removeClass("col-lg-6");
+            $("#yiDong").css("margin-top","60px");
+            /*$("#son").css("width","90%");
+            $("#son").css("margin-top","5px");*/
+        }
+    });
+</script>
+<style>
+    body{
+        background-image: url("./image/musicBei.jpeg");
+        background-size: 100% 100%;
+    }
+    td{
+        white-space:nowrap;overflow:hidden;text-overflow: ellipsis;
+    }
+    .colo{
+        color: #4cae4c}
+    input{
+        border: 1px solid #ccc;
+        padding: 7px 0px;
+        border-radius: 3px;
+        padding-left:5px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+        box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+        -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s
+    }
+    input:focus{
+        border-color: #66afe9;
+        outline: 0;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);
+        box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)
+    }
+
+    .parent {
+        margin: auto;
+        position: relative;
+    }
+    .son {
+        width: 400px;
+        height: 50px;
+        border-radius: 10px;
+        cursor: move;
+        position: absolute;
+        top: 20px;
+    }
+    .son:hover{
+        box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.57);
+        -webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.57);
+        -moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.57);
+    }
+    #geCi1{
+        background-image:
+                -webkit-gradient( linear, left top, right top, color-stop(0, #f22),
+                color-stop(0.15, #f2f),
+                color-stop(0.3, #22f),
+                color-stop(0.45, #2ff),
+                color-stop(0.6, #2f2),
+                color-stop(0.75, #2f2),
+                color-stop(0.9, #ff2),
+                color-stop(1, #f22) );
+        color: transparent;
+        -webkit-background-clip: text;
+    }
+    /*.parent{
+        width: 100%;
+        height: 600px;
+        overflow-y: auto;
+    }*/
+</style>
+
+<!--<div id="three-container" style="z-index: -4;position : absolute;">
+</div>-->
+
+<div class="parent">
+    <div class="son" id="son" style="left: 50px;opacity: 0.5;text-align: center">
+        <span id="geCi1" style="font-size: 30px;"></span>
+    </div>
+<div id="yiDong" style="text-align: center;height: 100px;">
+    <div style="padding-top: 30px">
+        <input type="text" style="border: 1px solid #ccc;padding: 7px 0px;border-radius: 3px;padding-left:5px;" id="name" placeholder="歌名或歌手">
+        <button id="select" class="btn input-group-append">查询</button>
+        <button  class="btn input-group-append" data-toggle="modal" data-target="#myModal">播放列表</button>
+    </div>
+</div>
+
+<div class="row" style="margin: auto;width: 90%">
+    <div class="col-lg-6">
+        <table class="table-striped" style="table-layout: fixed;width: 100%;border-collapse:collapse">
+            <thead>
+            <tr>
+                <th width="200px">歌曲名</th>
+                <th>专辑</th>
+                <th>时长</th>
+                <th>来源</th>
+                <th style="text-align: center">操作</th>
+            </tr>
+            </thead>
+            <tbody id="ge">
+            <%for(even in kuGou){%>
+            <tr style='border-radius: 5px'>
+                <td title='${even.SingerName}-${even.SongName}'><a onclick='listMusic(this);'>${even.SingerName}-${even.SongName}</a></td>
+                <td  title='${even.AlbumName}'>${even.AlbumName}</td>
+                <td >${@com.temp.myself.music.controller.Music.s(even.Duration+"",0)}</td>
+                <td >酷狗</td>
+                <td ><button id='${even.FileHash}' fid='${even.AlbumID}' onclick='MusicXi(this);' class='btn btn-link' style='width: 100%'>播放</button></td>
+            </tr>
+            <%}%>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-lg-6">
+        <table class="table-striped" style="table-layout: fixed;width: 100%;border-collapse:collapse">
+            <thead>
+            <tr>
+                <th width="200px">歌曲名</th>
+                <th>专辑</th>
+                <th>时长</th>
+                <th>来源</th>
+                <th style="text-align: center">操作</th>
+            </tr>
+            </thead>
+            <tbody id="qqGe">
+            <%for(even in qqMusic){%>
+            <tr style='border-radius: 5px'>
+                <td title='${even.singer[0].name}-${even.songname}'>${even.singer[0].name}-${even.songname}</td>
+                <td  title='${even.albumname}'>${even.albumname}</td>
+                <td >${@com.temp.myself.music.controller.Music.s(even.interval+"",0)}</td>
+                <td >qq音乐</td>
+                <td ><button id='${even.songmid}' onclick='tixing();' style='width: 100%' class='btn btn-link'>播放</button></td>
+            </tr>
+            <%}%>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-lg-6">
+        <table class="table-striped" style="table-layout: fixed;width: 100%;border-collapse:collapse">
+            <thead>
+            <tr>
+                <th width="200px">歌曲名</th>
+                <th>专辑</th>
+                <th>时长</th>
+                <th>来源</th>
+                <th style="text-align: center">操作</th>
+            </tr>
+            </thead>
+            <tbody id="kuWo">
+            <%for(even in kuWo){%>
+            <tr style='border-radius: 5px'>
+                <td title='${even.artist}-${even.name}'><a onclick='listMusic(this);'>${even.artist}-${even.name}</a></td>
+                <td  title='${even.album}'>${even.album}</td>
+                <td >${@com.temp.myself.music.controller.Music.s(even.duration+"",0)}</td>
+                <td >酷我音乐</td>
+                <td ><button id='${even.musicrid}' onclick='MusicXi(this);' class='btn btn-link' style='width: 100%'>播放</button></td>
+            </tr>
+            <%}%>
+            </tbody>
+            <tfoot>
+
+            </tfoot>
+        </table>
+    </div>
+    <div class="col-lg-6">
+        <table class="table-striped" style="table-layout: fixed;width: 100%;border-collapse:collapse">
+            <thead>
+            <tr>
+                <th width="200px">歌曲名</th>
+                <th>专辑</th>
+                <th>时长</th>
+                <th>来源</th>
+                <th style="text-align: center">操作</th>
+            </tr>
+            </thead>
+            <tbody id="wangYi">
+            <%for(even in wangYiYun){%>
+            <tr style='border-radius: 5px'>
+                <td title='${even.artists[0].name}-${even.name}'><a onclick='listMusic(this);'>${even.artists[0].name}-${even.name}</a></td>
+                <td  title='${even.album.name}'>${even.album.name}</td>
+                <td >${@com.temp.myself.music.controller.Music.s(even.duration+"",1)}</td>
+                <td >网易云音乐</td>
+                <td ><button id='${even.id}' onclick='MusicXi(this);' class='btn btn-link' style='width: 100%'>播放</button></td>
+            </tr>
+            <%}%>
+            </tbody>
+            <tfoot>
+
+            </tfoot>
+        </table>
+    </div>
+    <div style="text-align: center">
+        <button class="btn" style="text-align: center" onclick="tiao('shang')">上一页</button>
+        <button class="btn" style="text-align: center" onclick="tiao('xia')">下一页</button>
+
+    </div>
+</div>
+
+
+<!--
+<audio controls src="http://dl.stream.qqmusic.qq.com/C400004ByH6Q4K9jz8.m4a?guid=7676495696&vkey=B61CE659396E0B7AE79876487B137E33B61B605EF38436B403339C34CC9C96C292534C665B08ABE013DDE5B7D8CE89619255135193777E36&uin=&fromtag=66"></audio>
+-->
+    <div id="lycMusic" hidden></div>
+
+</div>
+<!--列表模态框-->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">播放列表</h4>
+            </div>
+            <div class="modal-body" id="listM" style="max-height: 400px;overflow-y: auto">
+                <table class="table-striped" style="table-layout: fixed;width: 100%">
+                    <thead>
+                    <tr>
+                        <%if(flag == "1"){%>
+                        <th width="280px">歌曲名</th>
+                        <%}else{%>
+                        <th width="300px">歌曲名</th>
+                        <%}%>
+                        <th>来源</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="list">
+
+                    </tbody>
+                    <tfoot>
+
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <audio id="kuWoXi" controls src="" style="float: left">音乐播放</audio>
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="float: left;margin-top: 10px">关闭</button>
+                <span id="geCi"></span>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<!--收藏模态框-->
+<div class="modal fade" id="cangModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="width:250px;margin:auto">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="cangModalLabel">收藏</h4>
+            </div>
+            <div class="modal-body" id="cang" style="max-height: 400px;overflow-y: auto">
+                <input hidden id="musicId">
+                <input hidden id="fileId">
+                <input hidden id="album">
+                <div style="margin: 5px">
+                    <label>类型:</label>
+                    <label class="radio-inline"><input type="radio" name="muradio" value="影视">影视</label>
+                    <label class="radio-inline"><input type="radio" name="muradio" value="其他">其他</label>
+                </div>
+                <div style="margin: 5px">
+                    <label for="year">年份:</label>
+                    <input class="input-sm" id="year">
+                </div>
+                <div style="margin: 5px">
+                    <label for="note">备注:</label>
+                    <input class="input-sm" id="note">
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="collect()">收藏</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<script type="application/javascript">
+    var ding ;
+    //console.log(${kuGou});
+    $("#select").click(function () {
+        var name = $("#name").val();
+        page = 1;
+        selectMusic(name,page);
+    });
+    /*点击播放*/
+    function MusicXi(even) {
+        var falg = 0;
+        var id = $(even).attr("id");
+        $.each($("#list").children("tr"),function (i,even1) {
+            if ($(even1).attr("lid") == id) {
+                $("td").removeClass("colo");
+                $(even1).children("td:first-child").addClass("colo");
+                //只能写.children[2].children[0]这种的
+                $("#kuWoXi").attr("src",$(even1).children[2].children[0].attr("path"));
+                $("#kuWoXi")[0].play();
+                ding = id;
+                falg = 1;
+            }
+        });
+
+        if (falg == 1){
+            return true;
+        }
+
+        var yuan = $(even).parent().prev().text();
+        var id = $(even).attr("id");
+        var fid ="";
+        var name = $(even).parent().prev().prev().prev().prev().children().text();
+        var album = $(even).parent().prev().prev().prev().text();
+        if (yuan == "酷狗"){
+            fid = $(even).attr("fid");
+        }
+        if (yuan == "网易云音乐") {
+            var html = "<tr lid='"+id+"' album = '"+album +"' kid = '"+ fid +"'>";
+            html += "<td>"+name+"</td>";
+            html += "<td>"+yuan+"</td>";
+            if (cang == "1"){
+                html += "<td><button path='http://music.163.com/song/media/outer/url?id="+id+".mp3' onclick='fang(this);' class='btn-success'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button><button class='btn-success' onclick='shou(this)' data-toggle='modal' data-target='#cangModal'>收藏</button></td>";
+            } else{
+                html += "<td><button path='http://music.163.com/song/media/outer/url?id="+id+".mp3' onclick='fang(this);' class='btn-success'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button></td>";
+            }
+            html += "</tr>";
+            $("#list").append(html);
+            /*获取歌词*/
+            $.ajax({
+                url:"/getWangYiMusicLyc",
+                type:"GET",
+                dataType:'json',
+                data: {id:id},
+                success:function (data) {
+                    if (data.lyc != null){
+                        var html2 = "<tr lyc='"+id+"'>";
+                        $.each(data.lyc,function (i,even) {
+                            html2 += "<td>"+even+"</td>";
+                        });
+                        html2 += "</tr>";
+                        $("#lycMusic").append(html2);
+                    }
+                },
+                error:function (data) {
+                    alert("暂不能使用");
+                }
+            });
+
+            $.each($("#list").children("tr"),function (i,even2) {
+                if ($(even2).attr("lid") == id) {
+                    $("td").removeClass("colo");
+                    $(even2).children("td:first-child").addClass("colo");
+                    $("#kuWoXi").attr("src","http://music.163.com/song/media/outer/url?id="+id+".mp3");
+                    $("#kuWoXi")[0].play();
+                    ding = id;
+                }
+            });
+            return true;
+        }
+        var data = {id:id,fid:fid,name:yuan};
+        $.ajax({
+            //url:"https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg?format=json205361747&platform=yqq&cid=205361747&songmid="+ id+"&filename=C400"+id+".m4a&guid=126548448",
+            url:"/getMusicXi",
+            type:"GET",
+            dataType:'json',
+            data: data,
+            success:function (data) {
+                if (data.url == ""){
+                    alert("歌曲为会员歌曲，不能播放");
+                    return true;
+                }
+                var html = "<tr lid='"+id+"'  album = '"+album +"' kid = '"+ fid +"'>";
+                html += "<td>"+name+"</td>";
+                html += "<td>"+yuan+"</td>";
+                if (cang == "1"){
+                    html += "<td><button path='"+data.url+"' onclick='fang(this);' class='btn-success'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button><button class='btn-success' onclick='shou(this)' data-toggle='modal' data-target='#cangModal'>收藏</button></td>";
+                } else{
+                    html += "<td><button path='"+data.url+"' onclick='fang(this);' class='btn-success'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button></td>";
+                }
+                html += "</tr>";
+                $("#list").append(html);
+                if (data.lyc!=null && data.lyc != ""){
+                    var html2 = "<tr lyc='"+id+"'>";
+                    $.each(data.lyc,function (i,even) {
+                        if (yuan == "酷狗") {
+                            if (i > 9){
+                                html2 += "<td>"+even+"</td>";
+                            }
+                        }else if (yuan == "酷我音乐") {
+                            html2 += "<td>"+even+"</td>";
+                        }
+                    });
+                    html2 += "</tr>";
+                    $("#lycMusic").append(html2);
+                }
+                $.each($("#list").children("tr"),function (i,even2) {
+                    if ($(even2).attr("lid") == id) {
+                        $("td").removeClass("colo");
+                        $(even2).children("td:first-child").addClass("colo");
+                        $("#kuWoXi").attr("src",data.url);
+                        $("#kuWoXi")[0].play();
+                        ding = id;
+                    }
+                });
+            },
+            error:function (data) {
+                alert("暂不能使用");
+            }
+        });
+        if (yuan == "酷我音乐") {
+            if($("tr[lyc='"+id+"']").length <=0){
+                kuWoLyc(id);
+            }
+        }
+    }
+    /*进入播放列表*/
+    function listMusic(even) {
+        var path1 = "";
+        var falg = 0;
+        var id = $(even).parent().next().next().next().next().children("button").attr("id");
+        var name = $(even).text();
+        var yuan = $(even).parent().next().next().next().text();
+        var album = $(even).parent().next().text();
+        var fid = "";
+        if (yuan == "酷狗"){
+            fid = $(even).parent().next().next().next().next().children("button").attr("fid");
+        }
+        $.each($("#list").children("tr"),function (i,even) {
+            if ($(even).attr("lid") == id){
+                falg = 1;
+            }
+        });
+        if (falg == 1){
+            return true;
+        }
+
+        if (yuan == "酷狗" || yuan == "酷我音乐") {
+            var data = {id:id,fid:fid,name:yuan};
+            $.ajax({
+                //url:"https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg?format=json205361747&platform=yqq&cid=205361747&songmid="+ id+"&filename=C400"+id+".m4a&guid=126548448",
+                url:"/getMusicXi",
+                type:"GET",
+                dataType:'json',
+                data: data,
+                success:function (data) {
+                    if (data.url == ""){
+                        alert("歌曲为空");
+                        return true;
+                    }
+                    path1 = data.url;
+                    var html = "<tr lid='"+id+"'  album = '"+album +"' kid = '"+ fid +"'>";
+                    html += "<td>"+name+"</td>";
+                    html += "<td>"+yuan+"</td>";
+                    if (cang == "1"){
+                        html += "<td><button class='btn-success' path='"+path1+"' onclick='fang(this);'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button><button class='btn-success' onclick='shou(this)' data-toggle='modal' data-target='#cangModal'>收藏</button></td>";
+                    } else{
+                        html += "<td><button class='btn-success' path='"+path1+"' onclick='fang(this);'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button></td>";
+                    }
+                    html += "</tr>";
+
+                    $("#list").append(html);
+                    if (data.lyc != ""){
+                        var html2 = "<tr lyc='"+id+"'>";
+                        $.each(data.lyc,function (i,even) {
+                            if (yuan == "酷狗") {
+                                if (i > 9){
+                                    html2 += "<td>"+even+"</td>";
+                                }
+                            }else if (yuan == "酷我音乐") {
+                                html2 += "<td>"+even+"</td>";
+                            }
+                        });
+                        html2 += "</tr>";
+                        $("#lycMusic").append(html2);
+                    }
+                },
+                error:function (data) {
+                    alert("获取失败");
+                }
+            });
+            if (yuan == "酷我音乐") {
+                if($("tr[lyc='"+id+"']").length <=0){
+                    kuWoLyc(id);
+                }
+            }
+        }else if(yuan == "网易云音乐"){
+            path1 = "http://music.163.com/song/media/outer/url?id="+id+".mp3";
+
+            var html = "<tr lid='"+id+"'  album = '"+album +"' kid = '"+ fid +"'>";
+            html += "<td>"+name+"</td>";
+            html += "<td>"+yuan+"</td>";
+            if (cang == "1"){
+                html += "<td><button class='btn-success' path='"+path1+"' onclick='fang(this);'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button><button class='btn-success' onclick='shou(this)' data-toggle='modal' data-target='#cangModal'>收藏</button></td>";
+            } else{
+                html += "<td><button class='btn-success' path='"+path1+"' onclick='fang(this);'>播放</button><button class='btn-danger' onclick='shan(this);'>删除</button></td>";
+            }
+            html += "</tr>";
+
+            $("#list").append(html);
+
+            /*获取歌词*/
+            $.ajax({
+                url:"/getWangYiMusicLyc",
+                type:"GET",
+                dataType:'json',
+                data: {id:id},
+                success:function (data) {
+                    if (data.lyc != null){
+                        var html2 = "<tr lyc='"+id+"'>";
+                        $.each(data.lyc,function (i,even) {
+                            html2 += "<td>"+even+"</td>";
+                        });
+                        html2 += "</tr>";
+                        $("#lycMusic").append(html2);
+                    }
+                },
+                error:function (data) {
+                    alert("暂不能使用");
+                }
+            });
+        }
+
+    }
+
+    function shan(even) {
+        $(even).parent().parent().remove();
+        var id = $(even).parent().parent().attr("lid");
+        $("tr[lyc="+id+"]").remove();
+
+    }
+
+    function fang(even) {
+        $("td").removeClass("colo");
+        $(even).parent().prev().prev().addClass("colo");
+        var path = $(even).attr("path");
+        $("#kuWoXi").attr("src",$(even).attr("path"));
+        $("#kuWoXi")[0].play();
+        var id = $(even).parent().parent().attr("lid");
+        ding = id;
+    }
+
+
+    var aud = document.getElementById("kuWoXi");
+    aud.loop = false;
+    aud.addEventListener('ended', function () {
+        //监听到播放结束后，在此处可调用自己的接口
+        var falg = 0;
+        var path = $("#kuWoXi").attr("src");
+        $.each($("#list").children("tr"),function (i,even) {
+            //只能写.children("td:last-child").children("button:first-child")
+            var path1 = $(even).children("td:last-child").children("button:first-child").attr("path");
+
+            if (falg == 1){
+                $("td").removeClass("colo");
+                $(even).children("td:first-child").addClass("colo");
+                $("#kuWoXi").attr("src",path1);
+                $("#kuWoXi")[0].play();
+                var id = $(even).attr("lid");
+                ding = id;
+                falg = 0;
+                return true;
+            }
+            if (path1 == path) {
+                falg = 1;
+                var musicId = $(even).attr("lid");
+                var source = $(even).children("td:first-child").next().text();
+                var fileId = $(even).attr("kid");
+
+                var author = $(even).children("td:first-child").text().split("-")[0];
+                var name = $(even).children("td:first-child").text().replace(author + "-","");
+                var album = $(even).attr("album");
+                saveMusicHistory(musicId,fileId,name,author,album,source);
+            }
+
+        });
+
+    },false);
+    /*保存播放历史*/
+    function saveMusicHistory(musicId,fileId,name,author,album,source) {
+        var musicHistory = { "musicId":musicId,
+            "fileId":fileId,
+            "name":name,
+            "author":author,
+            "album":album,
+            "source":source };
+        $.ajax({
+            url:"/saveMusic",
+            type:"POST",
+            contentType : "application/json;charset=utf-8",/*后台用RequestBody接收必须加这一条*/
+            dataType:"json",
+            data: JSON.stringify(musicHistory),
+            success:function (data) {
+                if (data.msg != "保存成功"){
+                    alert(data.msg);
+                }
+            },
+            error:function (data) {
+                alert("保存失败");
+            }
+        });
+    }
+
+    function s(even) {
+        var fen = 0;
+        var miao = 0;
+        if (parseInt(even) > 60){
+            fen = parseInt(even/60);
+            miao = parseInt(even%60);
+        }else{
+            miao = parseInt(even);
+        }
+
+        return fen+":"+miao;
+    }
+    function ms(even) {
+        var even1 = parseInt(even/1000);
+        return s(even1);
+    }
+
+    $("#name").focus(function () {
+        $(document).keydown(function(event){
+            if (event.keyCode == 13){
+                $("#select").click();
+            }
+        });
+    });
+
+    function tiao(even){
+        var name = $("#name").val();
+        if (even == "shang"){
+            if (page == 1) {
+                selectMusic(name,page);
+            }else{
+                page = page - 1;
+                selectMusic(name,page);
+            }
+        } else if (even == "xia"){
+            page = page + 1;
+            selectMusic(name,page);
+        }
+    }
+
+    function selectMusic(name,page){
+        $.ajax({
+            url:"/selectMusic",
+            type:"POST",
+            data:{name:name,page:page},
+            dataType:"json",
+            success:function (data) {
+                $("#ge").html("");
+                $.each(data.kuGou,function (i,even) {
+                    var html="<tr style='border-radius: 5px'>";
+                    html += "<td title='" +even.SingerName+"-"+even.SongName +"'><a onclick='listMusic(this);'>" +even.SingerName+"-"+even.SongName +"</a></td>";
+                    html += "<td  title='" +even.AlbumName+"'>" +even.AlbumName+"</td>";
+                    html += "<td >" +s(even.Duration)+"</td>";
+                    html += "<td >酷狗</td>";
+                    html += "<td ><button id='" + even.FileHash+ "' fid='" + even.AlbumID+ "' onclick='MusicXi(this);' class='btn btn-link' style='width: 100%'>播放</button></td>";
+                    html += "</tr>";
+                    $("#ge").append(html);
+                });
+                //console.log(data.kuGou);
+                //console.log(data.qqMusic);
+                if (data.qqMusic!=null && data.qqMusic!=undefined && data.qqMusic.length>0){
+                    $("#qqGe").html("");
+                    $.each(data.qqMusic,function (i,even) {
+                        var html1="<tr style='border-radius: 5px'>";
+                        html1 += "<td title='" +even.singer[0].name+"-"+even.songname +"'>" +even.singer[0].name+"-"+even.songname +"</td>";
+                        html1 += "<td  title='" +even.albumname+"'>" +even.albumname+"</td>";
+                        html1 += "<td >" +s(even.interval)+"</td>";
+                        html1 += "<td >qq音乐</td>";
+                        html1 += "<td ><button id='" + even.songmid+ "' onclick='tixing();' style='width: 100%' class='btn btn-link'>播放</button></td>";
+                        html1 += "</tr>";
+                        $("#qqGe").append(html1);
+                    });
+                }
+
+                //console.log(data.kuWoMusic);
+                $("#kuWo").html("");
+                $.each(data.kuWoMusic,function (i,even) {
+                    var html2="<tr style='border-radius: 5px'>";
+                    html2 += "<td title='" +even.artist+"-"+even.name +"'><a onclick='listMusic(this);'>" +even.artist+"-"+even.name +"</a></td>";
+                    html2 += "<td  title='" +even.album+"'>" +even.album+"</td>";
+                    html2 += "<td >" +s(even.duration)+"</td>";
+                    html2 += "<td >酷我音乐</td>";
+                    html2 += "<td ><button id='" + even.musicrid+ "' onclick='MusicXi(this);' class='btn btn-link' style='width: 100%'>播放</button></td>";
+                    html2 += "</tr>";
+                    $("#kuWo").append(html2);
+                });
+
+                //console.log(data.wangYiMusic);
+
+                $("#wangYi").html("");
+                $.each(data.wangYiMusic,function (i,even) {
+                    var html3="<tr style='border-radius: 5px'>";
+                    html3 += "<td title='" +even.artists[0].name+"-"+even.name +"'><a onclick='listMusic(this);'>" +even.artists[0].name+"-"+even.name +"</a></td>";
+                    html3 += "<td  title='" +even.album.name+"'>" +even.album.name+"</td>";
+                    html3 += "<td >" +ms(even.duration)+"</td>";
+                    html3 += "<td >网易云音乐</td>";
+                    html3 += "<td ><button id='" + even.id+ "' onclick='MusicXi(this);' class='btn btn-link' style='width: 100%'>播放</button></td>";
+                    html3 += "</tr>";
+                    $("#wangYi").append(html3);
+                });
+            },
+            error:function () {
+                alert("查询失败");
+            }
+        });
+    }
+
+    /*var request = new XMLHttpRequest();
+    request.open("POST","http://dl.stream.qqmusic.qq.com/C1L0001ApDs72gYqUk.m4a?vkey=F33047F1591194F61A2B27094B6CB1CBBD4C504FDB466A9975ADE22861FE0845D36C70AA0E23FF9000B2D5DEE71EB63E904224A849A7C59F&guid=8715282750&uin=2703401268&fromtag=66",true);
+    request.setRequestHeader("origin","https://y.qq.com");
+    request.setRequestHeader("referer","https://y.qq.com/");*/
+    $(function () {
+        setInterval(function () {
+            if($("tr[lyc="+ding+"]").children("td").length == 0 || $("tr[lyc="+ding+"]").children("td") == undefined){
+                $("#geCi").text("暂无歌词");
+                $("#geCi1").text("暂无歌词");
+            }else{
+                $.each($("tr[lyc="+ding+"]").children("td"),function (i,even) {
+                    var shangShi = -1;
+                    if (i != 0){
+                        shangShi = $("tr[lyc="+ding+"]").children("td")[i-1];
+                        shangShi = $(shangShi).text();
+                        shangShi = shangShi.split("]")[0];
+                        shangShi = shangShi.split("[")[1];
+                        shangShi = parseFloat(shangShi.split(":")[0] *60) + parseFloat(shangShi.split(":")[1]);
+                    }
+                    var houShi = 999;
+                    if (i != $("tr[lyc="+ding+"]").children("td").length -1){
+                        houShi = $("tr[lyc="+ding+"]").children("td")[i+1];
+                        houShi = $(houShi).text();
+                        houShi = houShi.split("]")[0];
+                        houShi = houShi.split("[")[1];
+                        try{
+                            houShi = parseFloat(houShi.split(":")[0] *60) + parseFloat(houShi.split(":")[1]);
+                        }catch (e) {
+                            console.log(houShi + "不能转化");
+                        }
+                    }
+                    even = $(even).text();
+                    var shi = even.split("]")[0];
+                    shi = shi.split("[")[1];
+                    var ci = even.split("]")[1];
+                    /*var timers=Math.ceil($("#kuWoXi")[0].currentTime);*/
+                    var timers=$("#kuWoXi")[0].currentTime;
+                    shi = parseFloat(shi.split(":")[0] *60) + parseFloat(shi.split(":")[1]);
+                    if (timers > parseFloat(shangShi) && timers < parseFloat(houShi)){
+                        $("#geCi").text(ci);
+                        $("#geCi1").text(ci);
+                        return false;
+                    }
+
+                });
+            }
+        },100);
+    });
+
+
+    function tixing(){
+        alert("暂时不支持");
+    }
+    //填充收藏字段
+    function shou(even){
+        var musicId = $(even).parent().parent().attr("lid");
+        var fileId = $(even).parent().parent().attr("kid");
+        var album = $(even).parent().parent().attr("album");
+        $("#musicId").val(musicId);
+        $("#fileId").val(fileId);
+        $("#album").val(album);
+    }
+    function collect(){
+        var musicId = $("#musicId").val();
+        var fileId = $("#fileId").val();
+        var album = $("#album").val();
+        var type = $('input[name="muradio"]:checked').val();
+        var year = $("#year").val();
+        var noteFen = $("#note").val();
+        var note = type + "@" + year + "@" + noteFen;
+        var musicHistory = { "musicId":musicId,
+            "fileId":fileId,
+            "album":album,
+            "note":note };
+        $.ajax({
+            url:"/saveMusic",
+            type:"POST",
+            contentType : "application/json;charset=utf-8",/*后台用RequestBody接收必须加这一条*/
+            dataType:"json",
+            data: JSON.stringify(musicHistory),
+            success:function (data) {
+                if (data.msg != "收藏成功"){
+                    alert(data.msg);
+                }
+            },
+            error:function (data) {
+                alert("收藏失败");
+            }
+        });
+    }
+
+    //获取酷我音乐歌词
+    function kuWoLyc(id){
+        $.ajax({
+            url:"https://m.kuwo.cn/newh5/singles/songinfoandlrc?musicId="+id.split("_")[1],
+            type:"GET",
+            // contentType : "application/json;charset=utf-8",/*后台用RequestBody接收必须加这一条*/
+            dataType:"json",
+            success:function (even) {
+                var lycKw =  even.data.lrclist;
+                if (lycKw != null && lycKw != ""){
+                    var html2 = "<tr lyc='"+id+"'>";
+                    $.each(lycKw,function (i,even) {
+                        html2 += "<td>[00:"+even.time+"]"+even.lineLyric+"</td>";
+                    });
+                    html2 += "</tr>";
+                    $("#lycMusic").append(html2);
+                }
+            },
+            error:function (data) {
+                alert("获取失败");
+            }
+        });
+    }
+
+
+    // 传入拖拽对象类名跟指定区域类名
+    dragFn('.son','.parent')
+    /*
+    dragObj:  拖拽对象
+    parent: 指定区域
+  */
+    function dragFn (dragObj,parent) {
+        $(dragObj).mousedown(function (e) {
+            var _this = $(this)
+            var parent_h = $(parent)[0].offsetHeight
+            parent_w = $(parent)[0].offsetWidth
+            drag_h = $(this)[0].offsetHeight
+            drag_w = $(this)[0].offsetWidth
+            var dragX = e.clientX - $(this)[0].offsetLeft
+            var dragY = e.clientY - $(this)[0].offsetTop
+
+            // 当前拖拽对象层级优先
+            $(this).css('z-index','9').siblings().css('z-index','1')
+
+            $(document).mousemove(function (e) {
+                var l = e.clientX - dragX
+                var t = e.clientY - dragY
+                if (l < 0) {
+                    l = 0
+                } else if (l > parent_w - drag_w) {
+                    l = parent_w - drag_w
+                }
+                if (t < 0) {
+                    t = 0
+                } else if (t > parent_h - drag_h) {
+                    t = parent_h - drag_h
+                }
+                _this.css({
+                    left: l + 'px',
+                    top: t + 'px',
+                })
+            })
+        })
+        $(document).mouseup(function () {
+            $(this).off('mousemove')
+        })
+    }
+</script>
+
+<!--<script src='http://cdnjs.cloudflare.com/ajax/libs/three.js/r80/three.min.js'></script>
+<script src='/js/music/bas.min.1.1.3.js'></script>
+<script src='/js/music/three_post.js'></script>
+<script src='/js/music/OrbitControls.js'></script>
+<script src='/js/music/LuminosityHighPassShader.js'></script>
+<script src='/js/music/UnrealBloomPass.js'></script>
+<script src='/js/music/1b4e36af86e7ae4e4d4f8a3dc.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.1/TweenMax.min.js'></script>
+
+<script src="/js/music/index.js"></script>-->

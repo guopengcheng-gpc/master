@@ -1,0 +1,20 @@
+<%include("common/top.html",{title:'测试'}){}%>
+    <div id="cc">测试</div>
+    <button id="sss">测试是</button>
+    <table>
+        <tr id="trcs">
+            <%
+            for(ll in list){
+            %>
+            <td>${ll.name}</td>
+            <td>${ll.address}</td>
+            <td>${ll.phone}</td>
+            <td>${ll.age}</td>
+            <%}%>
+        </tr>
+    </table>
+<script type="application/javascript">
+    $("#sss").click(function () {
+        $("#trcs").text("");
+    });
+</script>
